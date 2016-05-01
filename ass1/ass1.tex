@@ -1,0 +1,147 @@
+\documentclass[a4paper]{article}
+\usepackage{array}
+\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tabu}
+\usepackage{longtable}
+\usepackage[table]{xcolor}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{enumerate}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{pgfgantt}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage[margin=1 in]{geometry}
+\usepackage{color}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[usenames,dvipsnames]{pstricks}
+\usepackage{epsfig}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\usepackage{listings}
+\lstset{
+	language=,
+	literate=
+		{æ}{{\ae}}1
+		{ø}{{\o}}1
+		{å}{{\aa}}1
+		{Æ}{{\AE}}1
+		{Ø}{{\O}}1
+		{Å}{{\AA}}1,
+	backgroundcolor=\color{listinggray},
+	tabsize=3,
+	rulecolor=,
+	basicstyle=\scriptsize,
+	upquote=true,
+	aboveskip={0.2\baselineskip},
+	columns=fixed,
+	showstringspaces=false,
+	extendedchars=true,
+	breaklines=true,
+	prebreak =\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+	frame=single,
+	showtabs=false,
+	showspaces=false,
+	showlines=true,
+	showstringspaces=false,
+	identifierstyle=\ttfamily,
+	keywordstyle=\color[rgb]{0,0,1},
+	commentstyle=\color[rgb]{0.133,0.545,0.133},
+	stringstyle=\color[rgb]{0.627,0.126,0.941},
+  moredelim=**[is][\color{blue}]{@}{@},
+}
+
+\lstdefinestyle{base}{
+  emptylines=1,
+  breaklines=true,
+  basicstyle=\ttfamily\color{black},
+}
+
+\definecolor{barblue}{RGB}{153,204,254}
+\definecolor{groupblue}{RGB}{51,102,254}
+\definecolor{linkred}{RGB}{165,0,33}
+\def\sfm*{\texttt{scan\_for\_matches}}
+\def\x{\mbox{\textbf{x}}}
+\def\w{\mbox{\textbf{w}}}
+\def\Pr{\mbox{\textbf{Pr}}}
+\def\qvec#1#2{\begin{bmatrix} #1 \\ #2 \end{bmatrix}}
+\makeatletter
+\renewcommand{\ALG@beginalgorithmic}{\footnotesize}
+\makeatother
+\usetikzlibrary{shapes}
+\title{Signal and Image Processing 2016\\Weekly Assignment 1}
+\author{Ola Rønning - xxx999\\Tobias Hallundbæk Petersen - xtv657}
+\begin{document}
+\maketitle
+\subsection*{1.4}
+\begin{enumerate}[(a)]
+  \item We need to make sure that for the permutation to be completely random, each element has an equal chance of occupying each space in the permutation. Thus we can pick a number from 1 to $n$, this will require $\lceil \lg(n)\rceil$ bits, this has to be done for each space in the permutation, but with a lower $n$, resulting in
+    $$
+    \sum^n_1 \lceil \lg(n) \rceil
+    $$
+    bits needed for a permutation. We want to show a lower bound, meaning we can remove the ceiling,
+    \begin{align*}
+      \sum^n_{i=1} \lceil \lg(i) \rceil &\geq \sum^n_{i=1} \lg(i)\\
+                                        &= \lg\left(\prod_{i=1}^n i\right)\\
+                                        &\approx n\lg(n)
+    \end{align*}
+    which is the lower bound on the amount of bits we need. Time wise, we will touch each element exactly once, leading to a running time of $O(n)$.
+  \item As the values are random, the place where they will be in the permutation will be random, thus the claim is correct. Sorting can be done in $O(n\lg(n))$, thus not as efficient as the aforementioned scheme, assuming no randomized algorithms are used to sort them, no random bits are needed though.
+  \item
+    For each comparison of bits there is probability $\frac{1}{2}$ that a prefix of size one is not enough for comparison, with two bit prefix, there is $1/4$ probability that the prefix is too small and the third bit needs to be compared. If we define the random variable $Z$ as the total number of bits needed for comparison, this follows the geometric distribution with the parameter $p = q = \frac{1}{2}$, giving us
+    \begin{align*}
+      E[Z] &= \frac{1}{p}\\
+           &= \frac{1}{\frac{1}{2}}\\
+           &= 2
+    \end{align*}
+    Or more intuitively
+    \begin{align*}
+      E[Z] &= \sum_{i=1}^\infty \frac{i}{2^i}\\
+           &= 2
+    \end{align*}
+    expected bits per comparison. Lastly the total amount of expected bits depends on the sorting algorithm employed, and how many comparisons this uses. The tight lower bound for comparison based sorting is $O(n\lg n)$, resulting in a tight bound of $O(n\lg n)$ random bits needed for comparison in total.
+\end{enumerate}
+\subsection{Summary of lecture 1, 26/4}
+\subsubsection{A min-cut algorithm}
+Let $G$ be an undirected, connected multigraph with $n$ vertices. A cut in this graph is a division of the vertices into two non-empty sets. A min-cut is a cut such that the division of graph removes a minimal number of edges. Current deterministic approaches to this problem is quite involved, and not up to par with the following randomized algorithm:
+
+\begin{algorithm}
+  \caption{A Min-Cut Algorithm}
+  \begin{algorithmic}
+    \Procedure{Cut}{$V,E$}
+      \While{$|V| > 2$}
+        \State $e \gets $ rand($E$) \Comment{Picks and removes random edge from $E$}
+        \State $v \gets $ contract(vertices($e$)) \Comment{contract creates a vertice from two vertices, removing edges between them}
+        \State $V = V / $vertices($e$)
+      \EndWhile
+      \State \textbf{return} size($E$)
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+Obviously this algorithm does not return a min-cut on every run. We want to analyse with what probability that a min-cut is returned.
+
+If we let $k$ be the size of the min-cut. Looking at a single min-cut $C$ with $k$, we know that $G$ has at least $kn/2$ edges, as there would otherwise be a min-cut smaller than $k$.
+
+We want to bound from below the probability that no edge in $C$ is picked, such that the edges when there are two vertices left are exactly those in $C$.
+
+Letting $\Epsilon_i$ denote the event of picking an edge that is not in $C$ at the $i$th iteration for $1 \leq i \leq n-2$. In the first step there is a probability of at most $k/(nk/2) = 2/n$, thus $\Pr [\Epsilon_1] \geq 1 - 2/n$. Assuming $\Epsilon_1$ happens, there are at least $k(n-1)/2$ edges remaining, meaning that $\Pr [\Epsilon_2 | \Epsilon_1] = 1 - 2/(n-1)$. In the $i$th iteration, there are $n-i+1$ remaining vertices, this means that there are at least $k(n-i+1)/2$ edges remaing. This means we have a probability $\Pr[\Epsilon_i | \bigcap_{j=1}^{i-1} \Epsilon_j] \geq 1 -2/(n-i + 1)$ of not picking an edge in $C$ in the $i$th iteration.
+
+The probability that no edge in $C$ is ever picked in the process is then
+$$
+\Pr[\bigcap_{i=1}^{n-2}\Epsilon_i] \geq \prod_{i=1}^{n-2} \left( 1 - \frac{2}{n-i+1}\right) = \frac{2}{n(n-1)}
+$$
+We can see that the probability of discovering a min-cut is larger than $2/n^2$. As assumed the algorithm does not always produce a min-cut, but we can repeat the algorithm to increase our probability of finding the min-cut, if we were to repeat the a.lgorithm $n^2/2$ times, the probabilty that a min-cut is not found in any of the repetitions is at most
+$$
+\left(1-\frac{2}{n^2}\right)^{n^2/2} < 1/e
+$$
+But we could repeat the algorithm an arbitrary amount of times to reach a probability that we can accept.
+
+\subsubsection{Las Vegas and Monte Carlo Algorithms}
+The above mentioned algorithm is what is known as a Monte Carlo algorithm, this class of randomized algorithms are those who might not return the correct answer. Las Vegas algorithms always produce the correct answer, but the time it takes to execute might take a long time, as choices along the way might affect the running time. A Monte Carlo algorithm can always be turned into a Las Vegas algorithm if the result is checked to be correct after each run, and then only stopping when the correct answer is given, though this is not always practical.
+\end{document}
